@@ -1,0 +1,70 @@
+Plump Binary Document Format v01
+================================
+
+Integers such as for the count and timestamp are stored in big-endian.
+
+File Header
+===========
+
+--------------------------------------------------------------------------------
+POS HEX THING
+--------------------------------------------------------------------------------
+00  89  
+01  50  ASCII P
+02  4c  ASCII L
+03  55  ASCII U
+04  4d  ASCII M
+05  50  ASCII P
+06  0d  ASCII CR
+07  0a  ASCII LF
+08  1a  DOS EOF
+09  0a  ASCII LF
+0a  01  ASCII SOH
+0b      1-byte version number
+0c      4-byte timestamp
+..
+10  02  ASCII STX
+--------------------------------------------------------------------------------
+
+
+Body Chunks
+===========
+
+type      4-byte ASCII code identifying the following chunk.
+count     4-byte integer to identify the number of items in the coming sequence.
+chunks(n) n occurrences of a chunk
+text(n)   n occurrences of UTF-8 encoded characters.
+TYPE(n)   n occurrences of chunks of TYPE
+
+--------------------------------------------------------------------------------
+TYPE NAME  LISP-TYPE               LAYOUT
+--------------------------------------------------------------------------------
+00   NULL  NIL                     type 
+01   NODE  NODE                    type 
+02   NEST  NESTING-NODE            type count chunks(count)
+03   CHLD  CHILD-NODE              type 
+04   ROOT  ROOT                    type count chunks(count)
+05   TEXT  TEXT-NODE               type count text(count)
+06   COMM  COMMENT                 type count text(count)
+07   DOCT  DOCTYPE                 type count text(count)
+08   ELEM  ELEMENT                 type TGNM ATMP count chunks(count)
+09   FTXT  FULLTEXT-ELEMENT        type TGNM ATMP count chunks(count)
+0a   XMLH  XML-HEADER              type ATMP
+0b   CDAT  CDATA                   type count text(count)
+0c   PROC  PROCESSING-INSTRUCTION  type TGNM count text(count)
+f0   TGNM  TAG-NAME                type count text(count)
+f1   ATMP  ATTRIBUTE-MAP           type count ATTR(count)
+f2   ATTR  ATTRIBUTE               type count text(count) count text(count)
+--------------------------------------------------------------------------------
+
+
+File Footer
+===========
+
+--------------------------------------------------------------------------------
+POS HEX THING
+--------------------------------------------------------------------------------
+00  04  ASCII ETX
+01      16-byte MD5 of the entire file up until now
+..
+--------------------------------------------------------------------------------
