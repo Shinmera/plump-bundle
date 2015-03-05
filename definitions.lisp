@@ -16,7 +16,7 @@
 
 (define-writer integer (int)
   (check-type int (integer 0 4294967296))
-  (loop for i downfrom (* 8 4) by 8 above 0
+  (loop for i downfrom (* 8 3) by 8 to 0
         do (write-byte (ldb (byte 8 i) int) *stream*)))
 
 (define-reader integer ()
@@ -30,8 +30,7 @@
   (write-string string *stream*))
 
 (define-reader string ()
-  (let ((array (make-array (read! integer) :element-type 'character)))
-    (read-sequence array *stream*)))
+  (read-string (read! integer) *stream*))
 
 (define-writer version ()
   (write! byte *format-version*))
@@ -75,12 +74,13 @@
   (declare (ignore arg)))
 
 (define-reader parent ()
-  *root*)
+  *parent*)
 
-(define-writer children (children)
-  (write! integer (length children))
-  (loop for chunk across children
-        do (write! chunk chunk)))
+(define-writer children (&optional (node *parent*))
+  (let ((children (children node)))
+    (write! integer (length children))
+    (loop for chunk across children
+          do (write! chunk chunk))))
 
 (define-reader children ()
   (let* ((num (read! integer))
@@ -88,7 +88,8 @@
     (loop for i from 0 below num
           do (setf (aref array i)
                    (read! chunk)))
-    array))
+    (setf (fill-pointer array) num)
+    (setf (children *parent*) array)))
 
 (define-writer map (map)
   (write! integer (hash-table-count map))
@@ -98,7 +99,7 @@
 
 (define-reader map ()
   (let* ((num (read! integer))
-         (map (make-map num)))
+         (map (make-attribute-map num)))
     (loop repeat num
           for k = (read! string)
           for v = (read! string)
@@ -127,7 +128,7 @@
 
 (define-section body
   #x02 ; ASCII STX
-  (root *root*)
+  (root)
   #x04 ; ASCII ETX
   )
 
@@ -135,7 +136,9 @@
   (md5)
   (end-file))
 
-(define-chunk-translator "NULL" null)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (setf (chunk-translation "NULL") 'null)
+  (setf (chunk-translation "ROOT") 'root))
 
 (define-reader null ()
   ())
@@ -143,53 +146,61 @@
 (define-writer null (instance)
   (declare (ignore instance)))
 
-(define-chunk ("NODE" node))
+(define-chunk ("NODE" node)
+              ())
 
 (define-chunk ("NEST" nesting-node)
-  :children children)
+              (:children children))
 
 (define-chunk ("CHLD" child-node)
-  :parent parent)
+              (:parent parent))
 
 (define-chunk ("TXND" textual-node)
-  :text string)
+              (:text string))
 
-(define-chunk ("ROOT" root)
-  :children children)
+(define-writer root (&optional (root *root*))
+  (write! children root))
+
+(define-reader root ()
+  (let ((*parent* *root*))
+    (read! children)
+    *parent*))
 
 (define-chunk ("TEXT" text-node)
-  :parent parent
-  :text string)
+              (:parent parent
+               :text string))
 
 (define-chunk ("COMM" comment)
-  :parent parent
-  :text string)
+              (:parent parent
+               :text string))
 
 (define-chunk ("DOCT" doctype)
-  :parent parent
-  :doctype string)
+              (:parent parent
+               :doctype string))
 
 (define-chunk ("ELEM" element)
-  :parent parent
-  :tag-name string
-  :attributes map
-  :children children)
+              (:parent parent
+               :tag-name string
+               :attributes map)
+  (children))
 
 (define-chunk ("FTXT" fulltext-element)
-  :parent parent
-  :tag-name string
-  :attributes map
-  :children children)
+              (:parent parent
+               :tag-name string
+               :attributes map)
+  (children))
 
 (define-chunk ("XMLH" xml-header)
-  :parent parent
-  :attributes map)
+              (:parent parent
+               :attributes map))
 
 (define-chunk ("CDAT" cdata)
-  :parent parent
-  :text string)
+              (:parent parent
+               :text string))
 
 (define-chunk ("PROC" processing-instruction)
-  :parent parent
-  :tag-name string
-  :text string)
+              (:parent parent
+               :tag-name string
+               :text string))
+
+(define-chunk-translator)

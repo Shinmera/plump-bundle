@@ -8,6 +8,7 @@
 
 (defvar *check-consistency* NIL)
 (defvar *stream*)
+(defvar *parent*)
 (defvar *root*)
 
 (defun reader-name (name)
@@ -18,6 +19,7 @@
 
 (defmacro define-reader (name args &body body)
   `(defun ,(reader-name name) ,args
+     #+NIL (format T "~&~2,'0x ~a" (file-position *stream*) ',(reader-name name))
      ,@body))
 
 (defmacro define-writer (name args &body body)
@@ -35,18 +37,26 @@
     (read-sequence seq stream)
     seq))
 
-(defun transform-reader-part (part)
+(defmacro check-equal (part reader type-format)
+  (let ((read (gensym "READ")))
+    `(let ((,read ,reader))
+       (assert (equal ,part ,read) ()
+               ,(format NIL "Expected ~a but got ~a at file-position ~~d."
+                        type-format type-format)
+               ,part ,read (file-position *stream*)))))
+
+(defun transform-writer-part (part)
   (etypecase part
     ((unsigned-byte 8) `(write-byte ,part *stream*))
     (character `(write-char ,part *stream*))
     (string `(write-string ,part *stream*))
     ((and list (not null)) `(write! ,@part))))
 
-(defun transform-writer-part (part)
+(defun transform-reader-part (part)
   (etypecase part
-    ((unsigned-byte 8) `(assert (= ,part (read-byte *stream*))))
-    (character `(assert (char= ,part (read-char *stream*))))
-    (string `(assert (string= ,part (read-string ,(length part) *stream*))))
+    ((unsigned-byte 8) `(check-equal ,part (read-byte *stream*) "#x~2,'0x"))
+    (character `(check-equal ,part (read-char *stream*) "#\~c"))
+    (string `(check-equal ,part (read-string ,(length part) *stream*) "~s"))
     ((and list (not null)) `(read! ,@part))))
 
 (defmacro define-section (name &body parts)
@@ -72,8 +82,13 @@
 
 (defvar *chunk-translations* ())
 
-(defmacro define-chunk-translator (type class-name)
-  (pushnew (list type class-name) *chunk-translations* :key #'first :test #'string=)
+(defun chunk-translation (type)
+  (second (find type *chunk-translations* :key #'first :test #'string=)))
+
+(defun (setf chunk-translation) (class-name type)
+  (pushnew (list type class-name) *chunk-translations* :key #'first :test #'string=))
+
+(defmacro define-chunk-translator ()
   (let ((read-type (gensym "TYPE"))
         (chunk (gensym "CHUNK")))
     `(progn
@@ -81,7 +96,9 @@
          (let ((,read-type (read! type)))
            (cond ,@(loop for (type class-name) in *chunk-translations*
                          collect `((string= ,type ,read-type)
-                                   (read! ,class-name))))))
+                                   (read! ,class-name)))
+                 (T (error "Unrecognised block type ~s." ,read-type)))))
+       
        (define-writer chunk (,chunk)
          (etypecase ,chunk
            ,@(loop for (type class-name) in *chunk-translations*
@@ -89,20 +106,29 @@
                              (write! type ,type)
                              (write! ,class-name ,chunk))))))))
 
-(defmacro define-chunk ((type class-name) &body initargs)
+(defmacro define-chunk ((type class-name) initargs &body body)
   (let ((class (find-class class-name))
         (instance (gensym "INSTANCE")))
     `(progn
-       (define-chunk-translator ,type ,class-name)
+       (eval-when (:compile-toplevel :load-toplevel :execute)
+         (setf (chunk-translation ,type) ',class-name))
        ;; ??? PARENT ???
        (define-reader ,class-name ()
-         (make-instance ',class-name
-                        ,@(loop for (initarg part) on initargs by #'cddr
-                                append `(,initarg (read! ,part)))))
-       (define-writer ,class-name (,instance)
+         (let ((*parent*
+                 (make-instance ',class-name
+                                ,@(loop for (initarg part) on initargs by #'cddr
+                                        append `(,initarg (read! ,part))))))
+           ,@(mapcar #'transform-reader-part body)
+           *parent*))
+       
+       (define-writer ,class-name (&optional (,instance *parent*))
          (declare (ignorable ,instance))
-         ,@(loop for (initarg part) on initargs by #'cddr
-                 for accessor = (or (find-accessor-for-initarg class initarg)
-                                    (error "No accessor for initarg ~a found on class ~a" initarg class-name))
-                 collect `(write! ,part (,accessor ,instance)))))))
+         (let ((*parent* ,instance))
+           ,@(loop for (initarg part) on initargs by #'cddr
+                   for accessor = (or (find-accessor-for-initarg class initarg)
+                                      (error "No accessor for initarg ~a found on class ~a" initarg class-name))
+                   collect `(write! ,part (,accessor ,instance)))
+           
+           ,@(mapcar #'transform-writer-part body)
+           *parent*)))))
 
