@@ -43,10 +43,19 @@
 
 (define-writer integer (int)
   (check-type int (unsigned-byte 32))
-  (fast-io:writeu32-be int *buffer*))
+  ;; (fast-io:writeu32-be int *buffer*)
+  (loop for i downfrom (* 8 3) by 8 to 0
+        do (fast-io:fast-write-byte (ldb (byte 8 i) int) *buffer*)))
 
 (define-reader integer ()
-  (the (unsigned-byte 32) (fast-io:readu32-be *buffer*)))
+  ;; fast-io does a lot of stupid things here, making it slow.
+  ;; (the (unsigned-byte 32) (fast-io:readu32-be *buffer*))
+  (let ((int (fast-io:fast-read-byte *buffer*)))
+    (declare ((unsigned-byte 32) int))
+    (loop repeat 3
+          for byte of-type (unsigned-byte 8) = (fast-io:fast-read-byte *buffer*)
+          do (setf int (+ (* int #x100) byte)))
+    int))
 
 (define-writer char (char)
   (fast-io:fast-write-byte (char-code char) *buffer*))
@@ -110,32 +119,26 @@
 (defvar *chunk-translations* ())
 
 (defun chunk-translation (type)
-  (second (find type *chunk-translations* :key #'first :test #'equalp)))
+  (second (find type *chunk-translations* :key #'first :test #'=)))
 
 (defun (setf chunk-translation) (class-name type)
-  (etypecase type
-    (string (setf type (babel:string-to-octets type :encoding :utf-8)))
-    ((vector (unsigned-byte 8))))
-  (pushnew (list type class-name) *chunk-translations* :key #'first :test #'equalp))
+  ;; We convert our 4-byte ASCII type into an (unsigned-byte 32)
+  (setf type (loop for byte across (babel:string-to-octets type :encoding :utf-8)
+                   for int of-type (unsigned-byte 32) = byte then (+ (* int #x100) byte)
+                   finally (return int)))
+  (pushnew (list type class-name) *chunk-translations* :key #'first :test #'=))
 
 
 (declaim (inline type=))
 (defun type= (a b)
-  (declare ((simple-array (unsigned-byte 8) (4)) a b))
-  (and (= (aref a 0) (aref b 0))
-       (= (aref a 1) (aref b 1))
-       (= (aref a 2) (aref b 2))
-       (= (aref a 3) (aref b 3))))
+  (declare ((unsigned-byte 32) a b))
+  (= a b))
 
 (define-writer type (type)
-  (loop for byte across (the (simple-array (unsigned-byte 8)) type)
-        do (write! byte byte)))
+  (write! integer type))
 
 (define-reader type ()
-  (let ((type (make-array 4 :element-type '(unsigned-byte 8))))
-    (loop for i from 0 below 4
-          do (setf (aref type i) (read! byte)))
-    type))
+  (read! integer))
 
 (defmacro define-chunk-translator ()
   (let ((read-type (gensym "TYPE"))
