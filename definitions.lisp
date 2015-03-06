@@ -23,18 +23,8 @@
 (define-reader timestamp ()
   (read! integer))
 
-(define-writer md5 ()
-  ;(write-sequence (md5 *data*) *stream*)
-  )
-
-(define-reader md5 ()
-  (let ((octets (make-array 16 :element-type '(unsigned-byte 8))))
-    (fast-io:fast-read-sequence octets *buffer*)
-    (when *check-consistency*
-      )))
-
 (define-writer end-file ()
-  )
+  NIL)
 
 (define-reader end-file ()
   (let ((byte (fast-io:fast-read-byte *buffer* NIL NIL)))
@@ -112,7 +102,7 @@
   (setf (chunk-translation "NULL") 'null))
 
 (define-reader null ()
-  ())
+  NIL)
 
 (define-writer null (instance)
   (declare (ignore instance)))
