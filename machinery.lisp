@@ -9,7 +9,6 @@
 (defvar *check-consistency* NIL)
 (defvar *buffer*)
 (defvar *parent*)
-(defvar *root*)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun reader-name (name)
@@ -38,6 +37,7 @@
   (check-type byte (unsigned-byte 8))
   (fast-io:fast-write-byte byte *buffer*))
 
+(declaim (ftype (function () (unsigned-byte 8)) plump-bundle-readers::byte))
 (define-reader byte ()
   (fast-io:fast-read-byte *buffer*))
 
@@ -47,6 +47,7 @@
   (loop for i downfrom (* 8 3) by 8 to 0
         do (fast-io:fast-write-byte (ldb (byte 8 i) int) *buffer*)))
 
+(declaim (ftype (function () (unsigned-byte 32)) plump-bundle-readers::integer))
 (define-reader integer ()
   ;; fast-io does a lot of stupid things here, making it slow.
   ;; (the (unsigned-byte 32) (fast-io:readu32-be *buffer*))
@@ -60,6 +61,7 @@
 (define-writer char (char)
   (fast-io:fast-write-byte (char-code char) *buffer*))
 
+(declaim (ftype (function () character) plump-bundle-readers::char))
 (define-reader char ()
   (code-char (fast-io:fast-read-byte *buffer*)))
 
@@ -68,6 +70,7 @@
     (write! integer (length octets))
     (fast-io:fast-write-sequence octets *buffer*)))
 
+(declaim (ftype (function (&optional (unsigned-byte 8)) (simple-array character (*))) plump-bundle-readers::string))
 (define-reader string (&optional (length (read! integer)))
   (let ((seq (make-array length :element-type '(unsigned-byte 8))))
     (fast-io:fast-read-sequence seq *buffer*)
