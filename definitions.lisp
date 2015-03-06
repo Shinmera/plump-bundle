@@ -6,12 +6,16 @@
 
 (in-package #:org.shirakumo.plump.bundle)
 (defvar *format-version* 0)
+(declaim ((unsigned-byte 8) *format-version*))
 
 (define-writer version ()
   (write! byte *format-version*))
 
 (define-reader version ()
-  (read! byte))
+  (let ((version (read! byte)))
+    (when (/= version *format-version*)
+      (warn "Version mismatch! Document is v~d, library implements v~d. Continuing with fingers crossed."
+            version *format-version*))))
 
 (define-writer timestamp ()
   (write! integer (get-universal-time)))
@@ -91,21 +95,21 @@
   #x0a ; ASCII LF
   #x01 ; ASCII SOH
   (version)
-  (timestamp))
-
-(define-section body
-  #x02 ; ASCII STX
-  (root)
-  #x04 ; ASCII ETX
-  )
+  (timestamp)
+  #x02 ; ASCII STX)
 
 (define-section footer
-  (md5)
+  #x04 ; ASCII ETX
   (end-file))
 
+(define-reader body ()
+  (setf *parent* (read! chunk)))
+
+(define-writer body ()
+  (write! chunk *parent*))
+
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (setf (chunk-translation "NULL") 'null)
-  (setf (chunk-translation "ROOT") 'root))
+  (setf (chunk-translation "NULL") 'null))
 
 (define-reader null ()
   ())
@@ -125,13 +129,9 @@
 (define-chunk ("TXND" textual-node)
               (:text string))
 
-(define-writer root (&optional (root *root*))
-  (write! children root))
-
-(define-reader root ()
-  (let ((*parent* *root*))
-    (read! children)
-    *parent*))
+(define-chunk ("ROOT" root)
+              ()
+  (children))
 
 (define-chunk ("TEXT" text-node)
               (:parent parent
