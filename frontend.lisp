@@ -25,7 +25,14 @@
   (:method ((input vector))
     (check-type input (vector (unsigned-byte 8)))
     (fast-io:with-fast-input (buffer input)
-      (input buffer))))
+      (input buffer)))
+  (:documentation "Parse INPUT to a Plump document.
+Methods are defined for 
+  FAST-IO::INPUT-BUFFER
+  STREAM (unsigned-byte 8) element-type
+  PATHNAME
+  STRING treated as namestring
+  VECTOR (unsigned-byte 8) element-type"))
 
 (defgeneric output (target root)
   (:method ((output fast-io::output-buffer) root)
@@ -46,9 +53,17 @@
     (output (parse-namestring output) root))
   (:method ((output (eql :vector)) root)
     (fast-io:with-fast-output (buffer :vector)
-      (output buffer root))))
+      (output buffer root)))
+  (:documentation "Turn ROOT into a bundle and store it in TARGET.
+Methods are definted for
+  FAST-IO::OUTPUT-BUFFER
+  STREAM (unsigned-byte 8) element-type
+  PATHNAME
+  STRING treated as namestring
+  :VECTOR"))
 
 (defun output-to-file (pathname root &key (if-exists :error) (if-does-not-exist :create))
+  "A wrapper around OUTPUT to allow specifying of IF-EXISTS and IF-DOES-NOT-EXIST."
   (with-open-file (stream pathname :direction :output :element-type '(unsigned-byte 8)
                                    :if-exists if-exists :if-does-not-exist if-does-not-exist)
     (output stream root)))

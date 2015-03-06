@@ -18,9 +18,7 @@
    #:output-to-file)
   ;; machinery.lisp
   (:shadow
-   #:write-string)
-  (:export
-   #:*check-consistency*))
+   #:write-string))
 
 (defpackage #:plump-bundle-writers
   (:use))

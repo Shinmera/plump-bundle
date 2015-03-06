@@ -6,7 +6,6 @@
 
 (in-package #:org.shirakumo.plump.bundle)
 
-(defvar *check-consistency* NIL)
 (defvar *buffer*)
 (defvar *parent*)
 
