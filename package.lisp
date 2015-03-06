@@ -17,6 +17,8 @@
    #:output
    #:output-to-file)
   ;; machinery.lisp
+  (:shadow
+   #:write-string)
   (:export
    #:*check-consistency*))
 

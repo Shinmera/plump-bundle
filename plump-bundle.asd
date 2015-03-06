@@ -19,5 +19,6 @@
                (:file "definitions")
                (:file "frontend"))
   :depends-on (:plump-dom
-               :flexi-streams
+               :babel
+               :fast-io
                :closer-mop))

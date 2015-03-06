@@ -7,23 +7,25 @@
 (in-package #:org.shirakumo.plump.bundle)
 
 (defvar *check-consistency* NIL)
-(defvar *stream*)
+(defvar *buffer*)
 (defvar *parent*)
 (defvar *root*)
 
-(defun reader-name (name)
-  (intern (string name) "PLUMP-BUNDLE-READERS"))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun reader-name (name)
+    (intern (string name) "PLUMP-BUNDLE-READERS"))
 
-(defun writer-name (name)
-  (intern (string name) "PLUMP-BUNDLE-WRITERS"))
+  (defun writer-name (name)
+    (intern (string name) "PLUMP-BUNDLE-WRITERS")))
 
 (defmacro define-reader (name args &body body)
   `(defun ,(reader-name name) ,args
-     #+NIL (format T "~&~2,'0x ~a" (file-position *stream*) ',(reader-name name))
+     (declare (optimize speed))
      ,@body))
 
 (defmacro define-writer (name args &body body)
   `(defun ,(writer-name name) ,args
+     (declare (optimize speed))
      ,@body))
 
 (defmacro read! (reader &rest args)
@@ -32,31 +34,56 @@
 (defmacro write! (writer &rest args)
   `(,(writer-name writer) ,@args))
 
-(defun read-string (length &optional (stream *standard-input*))
-  (let ((seq (make-array length :element-type 'character)))
-    (read-sequence seq stream)
-    seq))
+(define-writer byte (byte)
+  (check-type byte (unsigned-byte 8))
+  (fast-io:fast-write-byte byte *buffer*))
+
+(define-reader byte ()
+  (fast-io:fast-read-byte *buffer*))
+
+(define-writer integer (int)
+  (check-type int (unsigned-byte 32))
+  (fast-io:writeu32-be int *buffer*))
+
+(define-reader integer ()
+  (the (unsigned-byte 32) (fast-io:readu32-be *buffer*)))
+
+(define-writer char (char)
+  (fast-io:fast-write-byte (char-code char) *buffer*))
+
+(define-reader char ()
+  (code-char (fast-io:fast-read-byte *buffer*)))
+
+(define-writer string (string)
+  (let ((octets (the vector (babel:string-to-octets string :encoding :utf-8))))
+    (write! integer (length octets))
+    (fast-io:fast-write-sequence octets *buffer*)))
+
+(define-reader string (&optional (length (read! integer)))
+  (let ((seq (make-array length :element-type '(unsigned-byte 8))))
+    (fast-io:fast-read-sequence seq *buffer*)
+    (babel:octets-to-string seq :encoding :utf-8)))
 
 (defmacro check-equal (part reader type-format)
   (let ((read (gensym "READ")))
     `(let ((,read ,reader))
        (assert (equal ,part ,read) ()
-               ,(format NIL "Expected ~a but got ~a at file-position ~~d."
+               ,(format NIL "Expected ~a but got ~a"
                         type-format type-format)
-               ,part ,read (file-position *stream*)))))
+               ,part ,read))))
 
 (defun transform-writer-part (part)
   (etypecase part
-    ((unsigned-byte 8) `(write-byte ,part *stream*))
-    (character `(write-char ,part *stream*))
-    (string `(write-string ,part *stream*))
+    ((unsigned-byte 8) `(write! byte ,part))
+    (character `(write! char ,part))
+    (string `(write! string ,part))
     ((and list (not null)) `(write! ,@part))))
 
 (defun transform-reader-part (part)
   (etypecase part
-    ((unsigned-byte 8) `(check-equal ,part (read-byte *stream*) "#x~2,'0x"))
-    (character `(check-equal ,part (read-char *stream*) "#\~c"))
-    (string `(check-equal ,part (read-string ,(length part) *stream*) "~s"))
+    ((unsigned-byte 8) `(check-equal ,part (read! byte) "#x~2,'0x"))
+    (character `(check-equal ,part (read! char) "#\~c"))
+    (string `(check-equal ,part (read! string ,(length part)) "~s"))
     ((and list (not null)) `(read! ,@part))))
 
 (defmacro define-section (name &body parts)
@@ -83,10 +110,32 @@
 (defvar *chunk-translations* ())
 
 (defun chunk-translation (type)
-  (second (find type *chunk-translations* :key #'first :test #'string=)))
+  (second (find type *chunk-translations* :key #'first :test #'equalp)))
 
 (defun (setf chunk-translation) (class-name type)
-  (pushnew (list type class-name) *chunk-translations* :key #'first :test #'string=))
+  (etypecase type
+    (string (setf type (babel:string-to-octets type :encoding :utf-8)))
+    ((vector (unsigned-byte 8))))
+  (pushnew (list type class-name) *chunk-translations* :key #'first :test #'equalp))
+
+
+(declaim (inline type=))
+(defun type= (a b)
+  (declare ((simple-array (unsigned-byte 8) (4)) a b))
+  (and (= (aref a 0) (aref b 0))
+       (= (aref a 1) (aref b 1))
+       (= (aref a 2) (aref b 2))
+       (= (aref a 3) (aref b 3))))
+
+(define-writer type (type)
+  (loop for byte across (the (simple-array (unsigned-byte 8)) type)
+        do (write! byte byte)))
+
+(define-reader type ()
+  (let ((type (make-array 4 :element-type '(unsigned-byte 8))))
+    (loop for i from 0 below 4
+          do (setf (aref type i) (read! byte)))
+    type))
 
 (defmacro define-chunk-translator ()
   (let ((read-type (gensym "TYPE"))
@@ -95,16 +144,16 @@
        (define-reader chunk ()
          (let ((,read-type (read! type)))
            (cond ,@(loop for (type class-name) in *chunk-translations*
-                         collect `((string= ,type ,read-type)
+                         collect `((type= ,type ,read-type)
                                    (read! ,class-name)))
                  (T (error "Unrecognised block type ~s." ,read-type)))))
        
        (define-writer chunk (,chunk)
-         (etypecase ,chunk
-           ,@(loop for (type class-name) in *chunk-translations*
-                   collect `(,class-name
-                             (write! type ,type)
-                             (write! ,class-name ,chunk))))))))
+         (cond ,@(loop for (type class-name) in *chunk-translations*
+                       collect `((eql (class-of ,chunk) (load-time-value (find-class ',class-name)))
+                                 (write! type ,type)
+                                 (write! ,class-name ,chunk)))
+           (T (error "Don't know how to translate ~a to chunk." ,chunk)))))))
 
 (defmacro define-chunk ((type class-name) initargs &body body)
   (let ((class (find-class class-name))

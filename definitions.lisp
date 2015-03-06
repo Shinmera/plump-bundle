@@ -7,31 +7,6 @@
 (in-package #:org.shirakumo.plump.bundle)
 (defvar *format-version* 0)
 
-(define-writer byte (byte)
-  (check-type byte (unsigned-byte 8))
-  (write-byte byte *stream*))
-
-(define-reader byte ()
-  (read-byte *stream*))
-
-(define-writer integer (int)
-  (check-type int (integer 0 4294967296))
-  (loop for i downfrom (* 8 3) by 8 to 0
-        do (write-byte (ldb (byte 8 i) int) *stream*)))
-
-(define-reader integer ()
-  (loop repeat 4
-        for int = (read-byte *stream*)
-        then (+ (* int #x100) (read-byte *stream*))
-        finally (return int)))
-
-(define-writer string (string)
-  (write! integer (length string))
-  (write-string string *stream*))
-
-(define-reader string ()
-  (read-string (read! integer) *stream*))
-
 (define-writer version ()
   (write! byte *format-version*))
 
@@ -44,29 +19,21 @@
 (define-reader timestamp ()
   (read! integer))
 
-(define-writer type (type)
-  (write-sequence type *stream*))
-
-(define-reader type ()
-  (let ((type (make-array 4 :element-type 'character)))
-    (read-sequence type *stream*)
-    type))
-
 (define-writer md5 ()
   ;(write-sequence (md5 *data*) *stream*)
   )
 
 (define-reader md5 ()
   (let ((octets (make-array 16 :element-type '(unsigned-byte 8))))
-    (read-sequence octets *stream*)
+    (fast-io:fast-read-sequence octets *buffer*)
     (when *check-consistency*
       )))
 
 (define-writer end-file ()
-  (close *stream*))
+  )
 
 (define-reader end-file ()
-  (let ((byte (read-byte *stream* NIL NIL)))
+  (let ((byte (fast-io:fast-read-byte *buffer* NIL NIL)))
     (when byte
       (error "File should end, but additional byte ~s read!" byte))))
 
@@ -77,7 +44,7 @@
   *parent*)
 
 (define-writer children (&optional (node *parent*))
-  (let ((children (children node)))
+  (let ((children (the (vector node) (children node))))
     (write! integer (length children))
     (loop for chunk across children
           do (write! chunk chunk))))
