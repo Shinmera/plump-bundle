@@ -5,7 +5,7 @@
 |#
 
 (in-package #:org.shirakumo.plump.bundle)
-(defvar *format-version* 0)
+(defvar *format-version* 1)
 (declaim ((unsigned-byte 8) *format-version*))
 
 (define-writer version ()
@@ -86,7 +86,8 @@
   #x01 ; ASCII SOH
   (version)
   (timestamp)
-  #x02 ; ASCII STX)
+  #x02 ; ASCII STX
+  )
 
 (define-section footer
   #x04 ; ASCII ETX
