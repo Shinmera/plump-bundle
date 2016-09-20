@@ -1,50 +1,78 @@
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta charset="utf-8"/>
-    <title>PLUMP-BUNDLE</title>
-    <style type="text/css">
-      html{font-family: serif;}
-      code a{text-decoration: none;}
-      h1{display: inline-block; margin-bottom: 0;}
-      code{font-family: monospace;}
-      h4{display: inline-block; margin: 0; padding: 0;}
-      #symbol-index ul{list-style: none;}
-      .package li{margin-bottom: 20px;}
-      .package pre{margin: 0 0 0 10px; white-space: pre-wrap;}
-      .package .nicknames{font-weight: normal;}
-      table{margin: 20px;}
-      td{padding-bottom: 10px;}
-    </style>
-  </head>
-  <body>
-    <header>
-      <h1>plump-bundle</h1>
-      <span>0.1.0</span>
-      <p>A binary storage format for Plump documents.</p>
-    </header>
-    <div id="content">
-      <article>
-        <c:documentate>
-          <span><h2>About Plump-Bundle</h2>
+<!DOCTYPE html> <html xmlns="http://www.w3.org/1999/xhtml"> <head> <meta charset="utf-8"/> <title>Plump-Bundle</title> <meta name="viewport" content="width=device-width"/> <meta name="description" content="A binary storage format for Plump documents."/> <meta name="author" content="Nicolas Hafner &lt;shinmera@tymoon.eu&gt;"/> <style type="text/css"> body{
+          max-width: 1024px;
+          margin: 0 auto 0 auto;
+          font-family: sans-serif;
+          color: #333333;
+          font-size: 14pt;
+          padding: 5px;
+      }
 
-<p>This is an implementation and specification of a binary file format to store <a href="http://shinmera.github.io/plump/">Plump</a> documents.</p>
+      body>header{
+          display:flex;
+          align-items: center;
+          justify-content: center;
+          flex-direction: column;
+          max-width: 100%;
+      }
 
-<h2>How To</h2>
+      img{
+          max-width: 100%;
+          max-height: 100%;
+      }
 
-<p>Storing happens through <code><a href="#PLUMP-BUNDLE:OUTPUT">output</a></code>, parsing through <code><a href="#PLUMP-BUNDLE:INPUT">input</a></code>.</p>
+      code{
+          font-family: Consolas, Inconsolata, monospace;
+      }
 
-<pre><code>(<a href="#PLUMP-BUNDLE:INPUT">plump-bundle:input</a> (<a href="#PLUMP-BUNDLE:OUTPUT">plump-bundle:output</a> :vector (plump:parse &quot;&lt;test&gt;Hey!&lt;/test&gt;&quot;)))
-</code></pre>
+      a{
+          text-decoration: none;
+          color: #0055AA;
+      }
 
-<p>They both accept namestrings, pathnames, vectors (<code>:vector</code> for ouput), or a <a href="https://github.com/rpav/fast-io">fast-io</a> buffer.
-The format handles all node-types defined in Plump-DOM 1.2 .</p>
+      #documentation{
+          text-align: justify;
+      }
 
-<h2>Format Specification (v1)</h2>
+      #documentation pre{
+          margin-left: 20px;
+      }
 
-<p>The following primitive types are declared:</p>
+      #symbol-index>ul{
+          list-style: none;
+          padding: 0;
+      }
+      #symbol-index .package>ul{
+          list-style: none;
+          padding: 0 0 0 10px;
+      }
+      #symbol-index .package .nicknames{
+          font-weight: normal;
+      }
+      #symbol-index .package h4{
+          display: inline-block;
+          margin: 0;
+      }
+      #symbol-index .package article{
+          margin: 0 0 15px 0;
+      }
+      #symbol-index .package article header{
+          font-size: 1.2em;
+          font-weight: normal;
+      }
+      #symbol-index .package .name{
+          margin-right: 5px;
+      }
+      #symbol-index .package .docstring{
+          margin: 0 0 0 15px;
+          white-space: pre-wrap;
+          font-size: 12pt;
+      }
 
-<pre><code>chunk     ::= type *
+      @media (max-width: 800px){
+          body{font-size: 12pt;}
+      } </style> </head> <body> <header> <h1>plump-bundle</h1> <span class="version">0.1.0</span> <p class="description">A binary storage format for Plump documents.</p> </header> <main> <article id="documentation">  <div><h2>About Plump-Bundle</h2> <p>This is an implementation and specification of a binary file format to store <a href="http://shinmera.github.io/plump/">Plump</a> documents.</p> <h2>How To</h2> <p>Storing happens through <code><a href="#PLUMP-BUNDLE:OUTPUT">output</a></code>, parsing through <code><a href="#PLUMP-BUNDLE:INPUT">input</a></code>.</p> <pre><code>(<a href="#PLUMP-BUNDLE:INPUT">plump-bundle:input</a> (<a href="#PLUMP-BUNDLE:OUTPUT">plump-bundle:output</a> :vector (plump:parse &quot;&lt;test&gt;Hey!&lt;/test&gt;&quot;)))
+</code></pre> <p>They both accept namestrings, pathnames, vectors (<code>:vector</code> for ouput), or a <a href="https://github.com/rpav/fast-io">fast-io</a> buffer.
+The format handles all node-types defined in Plump-DOM 1.2 .</p> <h2>Format Specification (v1)</h2> <p>The following primitive types are declared:</p> <pre><code>chunk     ::= type *
 children  ::= count chunk{count}
 map       ::= count pair{count}
 pair      ::= string string
@@ -54,11 +82,7 @@ count     ::= integer
 character --- A character encoded in utf-8.
 integer   --- Corresponds to (<a href="http://l1sp.org/cl/unsigned-byte">unsigned-byte</a> 32), stored in big-endian.
 byte      --- Corresponds to (<a href="http://l1sp.org/cl/unsigned-byte">unsigned-byte</a> 8)
-</code></pre>
-
-<p>The file header looks as follows:</p>
-
-<pre><code>-------------------------------------------------------
+</code></pre> <p>The file header looks as follows:</p> <pre><code>-------------------------------------------------------
 POS HEX THING
 -------------------------------------------------------
 00  89  
@@ -77,11 +101,7 @@ POS HEX THING
 ..      ..
 10  02  ASCII STX
 -------------------------------------------------------
-</code></pre>
-
-<p>Following the header is a single chunk. Chunks are generally composed of a <code><a href="http://l1sp.org/cl/type">type</a></code> header, followed by the content as specified by the chunk type. The <code><a href="http://l1sp.org/cl/type">type</a></code> header is given here in the form of four ASCII characters, which are then byte-composed into a single <code>(<a href="http://l1sp.org/cl/unsigned-byte">unsigned-byte</a> 32)</code> integer.</p>
-
-<pre><code>-------------------------------------------------------
+</code></pre> <p>Following the header is a single chunk. Chunks are generally composed of a <code><a href="http://l1sp.org/cl/type">type</a></code> header, followed by the content as specified by the chunk type. The <code><a href="http://l1sp.org/cl/type">type</a></code> header is given here in the form of four ASCII characters, which are then byte-composed into a single <code>(<a href="http://l1sp.org/cl/unsigned-byte">unsigned-byte</a> 32)</code> integer.</p> <pre><code>-------------------------------------------------------
 TYPE  LISP-TYPE               LAYOUT
 -------------------------------------------------------
 NULL  NULL                    type 
@@ -99,112 +119,28 @@ XMLH  XML-HEADER              type map
 CDAT  CDATA                   type string
 PROC  PROCESSING-INSTRUCTION  type string string
 -------------------------------------------------------
-</code></pre>
-
-<p>The footer looks like so:</p>
-
-<pre><code>-------------------------------------------------------
+</code></pre> <p>The footer looks like so:</p> <pre><code>-------------------------------------------------------
 POS HEX THING
 -------------------------------------------------------
 00  04  ASCII ETX
 -------------------------------------------------------
-</code></pre>
-
-<p>Thus, a sample document as denoted in standard XML syntax</p>
-
-<pre><code>&lt;start&gt;&lt;foo bar=&quot;baz&quot;&gt;Hello!&lt;/foo&gt;&lt;/start&gt;
-</code></pre>
-
-<p>Is transformed into the following bundle (as displayed by Emacs' hexl-mode)</p>
-
-<pre><code>00000000: 8950 4c55 4d50 0d0a 1a0a 0101 d8a4 84c2  .PLUMP..........
+</code></pre> <p>Thus, a sample document as denoted in standard XML syntax</p> <pre><code>&lt;start&gt;&lt;foo bar=&quot;baz&quot;&gt;Hello!&lt;/foo&gt;&lt;/start&gt;
+</code></pre> <p>Is transformed into the following bundle (as displayed by Emacs' hexl-mode)</p> <pre><code>00000000: 8950 4c55 4d50 0d0a 1a0a 0101 d8a4 84c2  .PLUMP..........
 00000010: 0252 4f4f 5400 0000 0145 4c45 4d00 0000  .ROOT....ELEM...
 00000020: 0573 7461 7274 0000 0000 0000 0001 454c  .start........EL
 00000030: 454d 0000 0003 666f 6f00 0000 0100 0000  EM....foo.......
 00000040: 0362 6172 0000 0003 6261 7a00 0000 0154  .bar....baz....T
 00000050: 4558 5400 0000 0648 656c 6c6f 2104       EXT....Hello!.
-</code></pre>
-</span>
-        </c:documentate>
-      </article>
-      <article>
-        <h2>Copyright</h2>
-        <span>plump-bundle</span> is licensed under the <span><a href="https://tldrlegal.com/search?q=Artistic">Artistic</a></span> license and ©<span>2015</span> <span>Nicolas Hafner &lt;shinmera@tymoon.eu&gt;</span>. This library can be obtained on <a href="https://github.com/Shinmera/plump-bundle">https://github.com/Shinmera/plump-bundle</a>.
-      </article>
-      <article id="symbol-index">
-        <h2>Package Index</h2>
-        <ul><li class="package">
-            <h3>
-              <a name="PLUMP-BUNDLE" href="#PLUMP-BUNDLE">PLUMP-BUNDLE</a>
-              <span class="nicknames">(ORG.SHIRAKUMO.PLUMP.BUNDLE)</span>
-            </h3>
-            <ul><li>
-                <a name="PLUMP-BUNDLE:OUTPUT-TO-FILE"/>
-                <article>
-                  <header>
-                    <span>FUNCTION</span>
-                    <code>
-                      <h4><a href="#PLUMP-BUNDLE:OUTPUT-TO-FILE">OUTPUT-TO-FILE</a></h4>
-                      <span/>
-                      <span>(PATHNAME ROOT &amp;KEY (IF-EXISTS :ERROR) (IF-DOES-NOT-EXIST :CREATE))</span>
-                    </code>
-                  </header>
-                  <pre>A wrapper around OUTPUT to allow specifying of IF-EXISTS and IF-DOES-NOT-EXIST.</pre>
-                </article>
-              </li><li>
-                <a name="PLUMP-BUNDLE:INPUT"/>
-                <article>
-                  <header>
-                    <span>GENERIC</span>
-                    <code>
-                      <h4><a href="#PLUMP-BUNDLE:INPUT">INPUT</a></h4>
-                      <span/>
-                      <span>(INPUT)</span>
-                    </code>
-                  </header>
-                  <pre>Parse INPUT to a Plump document.
+</code></pre> </div>  </article> <article id="copyright">  <h2>Copyright</h2> <span>plump-bundle</span> is licensed under the <span><a href="https://tldrlegal.com/search?q=Artistic">Artistic</a></span> license.  © <span>Nicolas Hafner &lt;shinmera@tymoon.eu&gt;</span> .  This library can be obtained on <a href="https://github.com/Shinmera/plump-bundle">https://github.com/Shinmera/plump-bundle</a>.  </article>  <article id="symbol-index"> <h2>Package Index</h2> <ul><li class="package"> <h3> <a name="PLUMP-BUNDLE" href="#PLUMP-BUNDLE">PLUMP-BUNDLE</a> <span class="nicknames">(ORG.SHIRAKUMO.PLUMP.BUNDLE)</span> </h3> <ul><li> <a name="PLUMP-BUNDLE:*FORMAT-VERSION*"> </a> <article> <header class="special"> <span class="type">special</span>  <h4 class="name"><code><a href="#PLUMP-BUNDLE:*FORMAT-VERSION*">*FORMAT-VERSION*</a></code></h4>  </header> <pre class="docstring"/> </article> </li><li> <a name="PLUMP-BUNDLE:OUTPUT-TO-FILE"> </a> <article> <header class="function"> <span class="type">function</span>  <code>(</code><h4 class="name"><code><a href="#PLUMP-BUNDLE:OUTPUT-TO-FILE">OUTPUT-TO-FILE</a></code></h4> <code class="qualifiers"></code> <code class="arguments">PATHNAME ROOT &amp;KEY (IF-EXISTS :ERROR) (IF-DOES-NOT-EXIST :CREATE)</code><code>)</code>  </header> <pre class="docstring">A wrapper around OUTPUT to allow specifying of IF-EXISTS and IF-DOES-NOT-EXIST.</pre> </article> </li><li> <a name="PLUMP-BUNDLE:INPUT"> </a> <article> <header class="generic"> <span class="type">generic</span>  <code>(</code><h4 class="name"><code><a href="#PLUMP-BUNDLE:INPUT">INPUT</a></code></h4> <code class="qualifiers"></code> <code class="arguments">INPUT</code><code>)</code>  </header> <pre class="docstring">Parse INPUT to a Plump document.
 Methods are defined for 
   FAST-IO::INPUT-BUFFER
   STREAM (unsigned-byte 8) element-type
   PATHNAME
   STRING treated as namestring
-  VECTOR (unsigned-byte 8) element-type</pre>
-                </article>
-              </li><li>
-                <a name="PLUMP-BUNDLE:OUTPUT"/>
-                <article>
-                  <header>
-                    <span>GENERIC</span>
-                    <code>
-                      <h4><a href="#PLUMP-BUNDLE:OUTPUT">OUTPUT</a></h4>
-                      <span/>
-                      <span>(TARGET ROOT)</span>
-                    </code>
-                  </header>
-                  <pre>Turn ROOT into a bundle and store it in TARGET.
+  VECTOR (unsigned-byte 8) element-type</pre> </article> </li><li> <a name="PLUMP-BUNDLE:OUTPUT"> </a> <article> <header class="generic"> <span class="type">generic</span>  <code>(</code><h4 class="name"><code><a href="#PLUMP-BUNDLE:OUTPUT">OUTPUT</a></code></h4> <code class="qualifiers"></code> <code class="arguments">TARGET ROOT</code><code>)</code>  </header> <pre class="docstring">Turn ROOT into a bundle and store it in TARGET.
 Methods are definted for
   FAST-IO::OUTPUT-BUFFER
   STREAM (unsigned-byte 8) element-type
   PATHNAME
   STRING treated as namestring
-  :VECTOR</pre>
-                </article>
-              </li><li>
-                <a name="PLUMP-BUNDLE:*FORMAT-VERSION*"/>
-                <article>
-                  <header>
-                    <span>SPECIAL</span>
-                    <code>
-                      <h4><a href="#PLUMP-BUNDLE:*FORMAT-VERSION*">*FORMAT-VERSION*</a></h4>
-                      <span/>
-                      <span/>
-                    </code>
-                  </header>
-                  <pre/>
-                </article>
-              </li></ul>
-          </li></ul>
-      </article>
-    </div>
-  </body>
-</html>
+  :VECTOR</pre> </article> </li></ul> </li></ul> </article>  </main> </body> </html> 
