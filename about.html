@@ -6,38 +6,41 @@
           font-size: 14pt;
           padding: 5px;
       }
-
       body>header{
           display:flex;
           align-items: center;
           justify-content: center;
           flex-direction: column;
           max-width: 100%;
+          text-align: center;
       }
-
+      body>header img{
+          max-width: 50%;
+      }
       img{
           max-width: 100%;
           max-height: 100%;
       }
-
       code{
           font-family: Consolas, Inconsolata, monospace;
       }
-
       a{
           text-decoration: none;
           color: #0055AA;
       }
-
+      a img{
+          border: none;
+      }
       #documentation{
           text-align: justify;
       }
-
       #documentation pre{
           margin-left: 20px;
           overflow: auto;
       }
-
+      #documentation img{
+          margin: 5px;
+      }
       #symbol-index>ul{
           list-style: none;
           padding: 0;
@@ -68,7 +71,6 @@
           white-space: pre-wrap;
           font-size: 12pt;
       }
-
       @media (max-width: 800px){
           body{font-size: 12pt;}
       } </style> </head> <body> <header> <h1>plump-bundle</h1> <span class="version">0.1.0</span> <p class="description">A binary storage format for Plump documents.</p> </header> <main> <article id="documentation">  <div><h2>About Plump-Bundle</h2> <p>This is an implementation and specification of a binary file format to store <a href="http://shinmera.github.io/plump/">Plump</a> documents.</p> <h2>How To</h2> <p>Storing happens through <code><a href="#PLUMP-BUNDLE:OUTPUT">output</a></code>, parsing through <code><a href="#PLUMP-BUNDLE:INPUT">input</a></code>.</p> <pre><code>(<a href="#PLUMP-BUNDLE:INPUT">plump-bundle:input</a> (<a href="#PLUMP-BUNDLE:OUTPUT">plump-bundle:output</a> :vector (plump:parse &quot;&lt;test&gt;Hey!&lt;/test&gt;&quot;)))
@@ -132,16 +134,16 @@ POS HEX THING
 00000030: 454d 0000 0003 666f 6f00 0000 0100 0000  EM....foo.......
 00000040: 0362 6172 0000 0003 6261 7a00 0000 0154  .bar....baz....T
 00000050: 4558 5400 0000 0648 656c 6c6f 2104       EXT....Hello!.
-</code></pre> </div>  </article> <article id="copyright">  <h2>Copyright</h2> <span>plump-bundle</span> is licensed under the <span><a href="https://tldrlegal.com/search?q=Artistic">Artistic</a></span> license.  © <span>Nicolas Hafner &lt;shinmera@tymoon.eu&gt;</span> .  This library can be obtained on <a href="https://github.com/Shinmera/plump-bundle">https://github.com/Shinmera/plump-bundle</a>.  </article>  <article id="symbol-index"> <h2>Package Index</h2> <ul><li class="package"> <h3> <a name="PLUMP-BUNDLE" href="#PLUMP-BUNDLE">PLUMP-BUNDLE</a> <span class="nicknames">(ORG.SHIRAKUMO.PLUMP.BUNDLE)</span> </h3> <ul><li> <a name="PLUMP-BUNDLE:*FORMAT-VERSION*"> </a> <article> <header class="special"> <span class="type">special</span>  <h4 class="name"><code><a href="#PLUMP-BUNDLE:*FORMAT-VERSION*">*FORMAT-VERSION*</a></code></h4>  </header> <pre class="docstring"/> </article> </li><li> <a name="PLUMP-BUNDLE:OUTPUT-TO-FILE"> </a> <article> <header class="function"> <span class="type">function</span>  <code>(</code><h4 class="name"><code><a href="#PLUMP-BUNDLE:OUTPUT-TO-FILE">OUTPUT-TO-FILE</a></code></h4> <code class="qualifiers"></code> <code class="arguments">PATHNAME ROOT &amp;KEY (IF-EXISTS :ERROR) (IF-DOES-NOT-EXIST :CREATE)</code><code>)</code>  </header> <pre class="docstring">A wrapper around OUTPUT to allow specifying of IF-EXISTS and IF-DOES-NOT-EXIST.</pre> </article> </li><li> <a name="PLUMP-BUNDLE:INPUT"> </a> <article> <header class="generic"> <span class="type">generic</span>  <code>(</code><h4 class="name"><code><a href="#PLUMP-BUNDLE:INPUT">INPUT</a></code></h4> <code class="qualifiers"></code> <code class="arguments">INPUT</code><code>)</code>  </header> <pre class="docstring">Parse INPUT to a Plump document.
+</code></pre> </div>  </article> <article id="copyright">  <h2>Copyright</h2> <span>plump-bundle</span> is licensed under the <span><a href="https://tldrlegal.com/search?q=Artistic">Artistic</a></span> license.  © <span>Nicolas Hafner &lt;shinmera@tymoon.eu&gt;</span> .  This library can be obtained on <a href="https://github.com/Shinmera/plump-bundle">https://github.com/Shinmera/plump-bundle</a>.  </article>  <article id="symbol-index"> <h2>Package Index</h2> <ul><li class="package"> <h3> <a name="PLUMP-BUNDLE" href="#PLUMP-BUNDLE">PLUMP-BUNDLE</a> <span class="nicknames">(ORG.SHIRAKUMO.PLUMP.BUNDLE)</span> </h3> <ul><li> <a name="PLUMP-BUNDLE:*FORMAT-VERSION*"> </a> <article> <header class="special"> <span class="type">special</span>  <h4 class="name"><code><a href="#PLUMP-BUNDLE:*FORMAT-VERSION*">*FORMAT-VERSION*</a></code></h4>  </header> <div class="docstring"><i>No docstring provided.</i></div> </article> </li><li> <a name="PLUMP-BUNDLE:OUTPUT-TO-FILE"> </a> <article> <header class="function"> <span class="type">function</span>  <code>(</code><h4 class="name"><code><a href="#PLUMP-BUNDLE:OUTPUT-TO-FILE">OUTPUT-TO-FILE</a></code></h4> <code class="qualifiers"></code> <code class="arguments">PATHNAME ROOT &amp;KEY (IF-EXISTS :ERROR) (IF-DOES-NOT-EXIST :CREATE)</code><code>)</code>  </header> <div class="docstring"><pre>A wrapper around OUTPUT to allow specifying of IF-EXISTS and IF-DOES-NOT-EXIST.</pre></div> </article> </li><li> <a name="PLUMP-BUNDLE:INPUT"> </a> <article> <header class="generic"> <span class="type">generic</span>  <code>(</code><h4 class="name"><code><a href="#PLUMP-BUNDLE:INPUT">INPUT</a></code></h4> <code class="qualifiers"></code> <code class="arguments">INPUT</code><code>)</code>  </header> <div class="docstring"><pre>Parse INPUT to a Plump document.
 Methods are defined for 
   FAST-IO::INPUT-BUFFER
   STREAM (unsigned-byte 8) element-type
   PATHNAME
   STRING treated as namestring
-  VECTOR (unsigned-byte 8) element-type</pre> </article> </li><li> <a name="PLUMP-BUNDLE:OUTPUT"> </a> <article> <header class="generic"> <span class="type">generic</span>  <code>(</code><h4 class="name"><code><a href="#PLUMP-BUNDLE:OUTPUT">OUTPUT</a></code></h4> <code class="qualifiers"></code> <code class="arguments">TARGET ROOT</code><code>)</code>  </header> <pre class="docstring">Turn ROOT into a bundle and store it in TARGET.
+  VECTOR (unsigned-byte 8) element-type</pre></div> </article> </li><li> <a name="PLUMP-BUNDLE:OUTPUT"> </a> <article> <header class="generic"> <span class="type">generic</span>  <code>(</code><h4 class="name"><code><a href="#PLUMP-BUNDLE:OUTPUT">OUTPUT</a></code></h4> <code class="qualifiers"></code> <code class="arguments">TARGET ROOT</code><code>)</code>  </header> <div class="docstring"><pre>Turn ROOT into a bundle and store it in TARGET.
 Methods are definted for
   FAST-IO::OUTPUT-BUFFER
   STREAM (unsigned-byte 8) element-type
   PATHNAME
   STRING treated as namestring
-  :VECTOR</pre> </article> </li></ul> </li></ul> </article>  </main> </body> </html> 
+  :VECTOR</pre></div> </article> </li></ul> </li><li class="package"> <h3> <a name="PLUMP-BUNDLE-WRITERS" href="#PLUMP-BUNDLE-WRITERS">PLUMP-BUNDLE-WRITERS</a> <span class="nicknames"/> </h3> <ul/> </li><li class="package"> <h3> <a name="PLUMP-BUNDLE-READERS" href="#PLUMP-BUNDLE-READERS">PLUMP-BUNDLE-READERS</a> <span class="nicknames"/> </h3> <ul/> </li></ul> </article>  </main> </body> </html> 
