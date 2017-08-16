@@ -4,7 +4,6 @@
  Author: Nicolas Hafner <shinmera@tymoon.eu>
 |#
 
-(in-package #:cl-user)
 (asdf:defsystem plump-bundle
   :name "Plump-Bundle"
   :version "0.1.0"
