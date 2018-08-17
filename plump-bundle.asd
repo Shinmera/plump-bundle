@@ -11,7 +11,9 @@
   :author "Nicolas Hafner <shinmera@tymoon.eu>"
   :maintainer "Nicolas Hafner <shinmera@tymoon.eu>"
   :description "A binary storage format for Plump documents."
-  :homepage "https://github.com/Shinmera/plump-bundle"
+  :homepage "https://Shinmera.github.io/plump-bundle/"
+  :bug-tracker "https://github.com/Shinmera/plump-bundle/issues"
+  :source-control (:git "https://github.com/Shinmera/plump-bundle.git")
   :serial T
   :components ((:file "package")
                (:file "machinery")
