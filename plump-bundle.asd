@@ -7,7 +7,7 @@
 (asdf:defsystem plump-bundle
   :name "Plump-Bundle"
   :version "0.1.0"
-  :license "Artistic"
+  :license "zlib"
   :author "Nicolas Hafner <shinmera@tymoon.eu>"
   :maintainer "Nicolas Hafner <shinmera@tymoon.eu>"
   :description "A binary storage format for Plump documents."
